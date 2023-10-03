@@ -13,7 +13,7 @@ Go to https://abhishek-chat-app.onrender.com Enter your Username and ChatRoom na
 
 ## for Developers
 
-* clone the repo from https://github.com/kevit-abhishek-vadoliya/Chat-app 
+* Clone the repo from https://github.com/kevit-abhishek-vadoliya/Chat-app 
 
 ### initial Command 
 ```javascript 

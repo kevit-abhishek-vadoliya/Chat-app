@@ -5,6 +5,7 @@ const socketio = require('socket.io')
 const Filter = require('bad-words')
 const { generateMessage, generateLocMessage } = require('./utils/messages')
 const { addUser, getUser, getUsersInRoom, removeUser } = require('./utils/users') 
+const logger = require('./loggers/index')
 
 
 const app = express()
@@ -21,6 +22,8 @@ io.on('connection', (socket) => {
     console.log("New WebSocket Connecion")
 
     socket.on('join', ({ username, room }, callback) => {
+    logger.info(`${username} has joined room${room}`)
+
         const { error, user } = addUser({id: socket.id, username, room })
 
         if(error){
@@ -43,11 +46,14 @@ io.on('connection', (socket) => {
     socket.on('sendMessage', (message, callback) => {
 
         const filter = new Filter()
+        const user = getUser(socket.id)
 
         if (filter.isProfane(message)) {
+
+            logger.warn(`${user.username} has abused in chat ${user.room}`)
             return callback('Message contains Profanity')
+            
         }
-        const user = getUser(socket.id)
 
         io.to(user.room).emit('message', generateMessage(user.username, message))
         callback()
@@ -56,6 +62,7 @@ io.on('connection', (socket) => {
     socket.on('sendLocation', (loc, callback) => {
         const user = getUser(socket.id) 
         io.to(user.room).emit('locationMessage', generateLocMessage(user.username ,`https://www.google.com/maps?q=${loc.lat},${loc.long}`))
+        logger.info(`${user.username} has shared location`)
         callback()
     })
 
@@ -64,6 +71,7 @@ io.on('connection', (socket) => {
 
         if(user){
             io.to(user.room).emit('message', generateMessage(`${user.username} has left the chat!`))
+            logger.info(`${user.username} has left the room ${user.room}`)
             io.to(user.room).emit('roomData', {
                 room: user.room,
                 users: getUsersInRoom(user.room)
